@@ -85,7 +85,7 @@ const registerUser=asyncHandler(async(req,res)=>{
     }
 
     //4
-    const avatarLocalPath= req.files?.avatar[0]?.path;
+    const avatarLocalPath= req.files?.avatar?.[0]?.path;
     // const coverImageLocalPath= req.files?.coverImage[0]?.path;
 
     let coverImageLocalPath;
@@ -198,8 +198,8 @@ const logoutUser= asyncHandler(async(req,res)=>{
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1
             }
         },
         {
@@ -222,7 +222,7 @@ const logoutUser= asyncHandler(async(req,res)=>{
 
 
 const refreshAccessToken= asyncHandler(async(req,res)=>{
-    const incomingRefreshToken= req.cookie.refreshToken || req.body.refreshToken
+    const incomingRefreshToken= req.cookies.refreshToken || req.body.refreshToken
 
     if (!incomingRefreshToken) {
         throw new ApiError(401, "unauthorized request")
@@ -269,8 +269,8 @@ const refreshAccessToken= asyncHandler(async(req,res)=>{
 const changeCurrentPassword= asyncHandler(async(req,res)=> {
     const{oldPassword, newPassword}= req.body
 
-    const user= User.findById(req.user?._id)
-    const isPasswordCorrect= user.isPasswordCorrect(oldPassword)
+    const user= await User.findById(req.user?._id)
+    const isPasswordCorrect= await user.isPasswordCorrect(oldPassword)
 
     if (!isPasswordCorrect) {
         throw new ApiError(400, "Invalid old password")
@@ -336,7 +336,7 @@ const updateUserAvatar = asyncHandler(async(req,res)=>{
         
     }
 
-    const user = User.findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
             $set:{
